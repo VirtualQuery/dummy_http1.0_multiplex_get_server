@@ -56,6 +56,10 @@ struct tcp_slave_socket { // make non-blocking, improve signatures?
         constexpr size_t MAX_SIZE = 3000;
         char buf[MAX_SIZE + 1];
         const auto n_bytes_recv = ::recv(slave_fd, buf, MAX_SIZE, MSG_NOSIGNAL); // do i really need MSG_NOSIGNAL everywhere?
+        if (-1 == n_bytes_recv) {
+            perror("recv error");
+            return "";
+        }
         buf[n_bytes_recv] = 0;
         return buf;
     }
