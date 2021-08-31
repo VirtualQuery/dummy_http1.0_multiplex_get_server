@@ -14,7 +14,7 @@ struct TCPAddr {
 
         TCPAddr addr;
         addr.addr.sin_family = AF_INET;
-        if (0 == inet_pton(AF_INET, ip_str.data(), &addr.addr.sin_addr)) {
+        if (-1 == inet_pton(AF_INET, ip_str.data(), &addr.addr.sin_addr)) {
             perror("inet_pton error");
         }
         addr.addr.sin_port = htons(port);
