@@ -28,6 +28,18 @@ public:
                     break;
             }
         }
+        if ("" == ip) {
+            fprintf(stderr, "ip is mandatory");
+            exit(EXIT_FAILURE);
+        }
+        if ("" == port) {
+            fprintf(stderr, "port is mandatory");
+            exit(EXIT_FAILURE);
+        }
+        if ("" == directory) {
+            fprintf(stderr, "directory is mandatory");
+            exit(EXIT_FAILURE);
+        }
         const auto addr = TCPAddr::from_strs(ip, port);
         return Params {
             addr,
