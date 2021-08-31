@@ -11,7 +11,7 @@ struct opt {
         std::string ip;
         std::string port;
         std::string directory;
-        while(1) {
+        while(true) {
             const int opt = getopt(argc, argv, "h:p:d:");
             if (-1 == opt) break;
             switch(opt) {
