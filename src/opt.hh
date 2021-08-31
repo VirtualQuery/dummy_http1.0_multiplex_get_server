@@ -2,13 +2,11 @@
 #pragma once
 
 struct opt {
-public:
-struct Params {
-    const TCPAddr addr;
-    const std::string directory;
-};
+    struct Params {
+        const TCPAddr addr;
+        const std::string directory;
+    };
 
-public:
     static Params parse_cli_params(int argc, char* argv[]) {
         std::string ip;
         std::string port;
