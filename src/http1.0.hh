@@ -12,7 +12,16 @@ struct http_1dot0 {
         std::stringstream ss(get_request);
         std::string GET, path;
         ss >> GET >> path;
-        return path.substr(1); // strip '/'
+
+        path = path.substr(1); // strip '/'
+
+        // trim cgi params:
+        const auto pos = path.find('?');
+        if (std::string::npos != pos) {
+            path = path.substr(0, pos);
+        }
+
+        return path;
     }
 
     static std::string get_response(const std::string& file_path) {
