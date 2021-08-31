@@ -1,4 +1,5 @@
-#include "tcp_socket.hh"
+#include "tcp_socket_master.hh"
+#include "tcp_socket_slave.hh"
 #include "opt.hh"
 #include "http1.0.hh"
 #include "daemon.hh"
