@@ -41,28 +41,27 @@ struct server {
             if (FD_ISSET(master.file_descriptor(), &socket_fds)) {
                 puts("accept");
                 const auto slave = tcp_slave_socket::accept(master);
+                //tcp_slave_socket::set_nonblocking(slave);
                 slave_fd_set.insert(slave);
             }
 
-            std::vector<int> slave_fds_to_be_erased;
+            std::vector<int> slave_fds_to_be_erased; // if i want to do non-blocking need to make it threadsafe
             for(const int slave_fd: slave_fd_set) {
                 if (FD_ISSET(slave_fd, &socket_fds)) {
                     puts("fd set");
-                    thread_pool.add_job([slave_fd](){
+                    thread_pool.add_job([slave_fd, &slave_fds_to_be_erased](){
                         const auto buf = tcp_slave_socket::recv(slave_fd);
                         if (0 != buf.size()) {
                             const auto path = http_1dot0::get_request_file_path(buf);
                             tcp_slave_socket::send(slave_fd, http_1dot0::get_response(path));
                             puts("sent");
                         }
-                        else if (errno != EAGAIN) {
-                            if (-1 == shutdown(slave_fd, SHUT_RDWR) ) {
-                                perror("shutdown failed");
-                            }
-                            if (-1 == close(slave_fd) ) {
-                                perror("close failed");
-                            }
-                        }
+                        tcp_slave_socket::kill(slave_fd); // just do blocking and kill for now
+
+                        // else if (errno != EAGAIN) { // for non-blocking io, no data available
+                        //     tcp_slave_socket::kill(slave_fd);
+                        //     slave_fds_to_be_erased.push_back(slave_fd); // instead of below
+                        // }
                     });
                     slave_fds_to_be_erased.push_back(slave_fd);
                 }
