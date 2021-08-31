@@ -48,6 +48,7 @@
         "cinttypes": "cpp",
         "typeinfo": "cpp",
         "bit": "cpp",
-        "thread": "cpp"
+        "thread": "cpp",
+        "mutex": "cpp"
     }
 }

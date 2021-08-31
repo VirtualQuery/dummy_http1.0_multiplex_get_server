@@ -2,6 +2,7 @@
 #include "opt.hh"
 #include "http1.0.hh"
 #include "daemon.hh"
+#include "thread_pool.hh"
 
 #include <stdio.h>
 #include <sys/select.h>
@@ -15,6 +16,9 @@
 struct server {
     static void run(const opt::Params& params) {
         daemonize(params.directory.data());
+
+        ThreadPool thread_pool;
+
         TCPMasterSocket master;
         std::set<int> slave_fd_set;
 
@@ -41,11 +45,10 @@ struct server {
             }
 
             std::vector<int> slave_fds_to_be_erased;
-            std::vector<std::thread> threads;
             for(const int slave_fd: slave_fd_set) {
                 if (FD_ISSET(slave_fd, &socket_fds)) {
                     puts("fd set");
-                    threads.push_back(std::thread([=](){ // yes, multithreading... should add a threadpool, at least, lol
+                    thread_pool.add_job([slave_fd](){
                         const auto buf = tcp_slave_socket::recv(slave_fd);
                         if (0 != buf.size()) {
                             const auto path = http_1dot0::get_request_file_path(buf);
@@ -60,12 +63,9 @@ struct server {
                                 perror("close failed");
                             }
                         }
-                    }));
+                    });
                     slave_fds_to_be_erased.push_back(slave_fd);
                 }
-            }
-            for(auto& thread: threads) {
-                thread.join();
             }
 
             for(const int slave_fd: slave_fds_to_be_erased) {
