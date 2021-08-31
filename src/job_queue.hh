@@ -9,8 +9,10 @@ struct JobQueue {
     using Job = std::function<void()>;
 
     void push(Job job) {
-        std::unique_lock<std::mutex> unique_lock(job_queue_mutex);
-        job_queue.push(job);
+        {
+            std::unique_lock<std::mutex> unique_lock(job_queue_mutex);
+            job_queue.push(job);
+        }
         cv_job_queue_is_not_empty.notify_one();
     }
 
