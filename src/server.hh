@@ -48,7 +48,7 @@ struct server {
             std::vector<int> slave_fds_to_be_erased; // if i want to do non-blocking need to make it threadsafe
             for(const int slave_fd: slave_fd_set) {
                 if (FD_ISSET(slave_fd, &socket_fds)) {
-                    thread_pool.add_job([slave_fd, &slave_fds_to_be_erased](){
+                    thread_pool.add_job([slave_fd](){
                         const auto buf = tcp_slave_socket::recv(slave_fd);
                         if (0 != buf.size()) {
                             const auto path = http_1dot0::get_request_file_path(buf);
