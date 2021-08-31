@@ -5,9 +5,9 @@
 
 #pragma once
 
-using Job = std::function<void()>;
-
 struct JobQueue {
+    using Job = std::function<void()>;
+
     void push(Job job) {
         std::unique_lock<std::mutex> unique_lock(job_queue_mutex);
         job_queue.push(job);
@@ -23,6 +23,7 @@ struct JobQueue {
         job_queue.pop();
         return ret;
     }
+    
 private:
     std::condition_variable cv_job_queue_is_not_empty;
     std::mutex job_queue_mutex;

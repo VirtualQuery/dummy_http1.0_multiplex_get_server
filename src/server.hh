@@ -33,6 +33,7 @@ struct server {
             for(const int slave_fd: slave_fd_set) {
                 FD_SET(slave_fd, &socket_fds);
             }
+
             const auto max_slave_fd = !slave_fd_set.empty() ? *slave_fd_set.rbegin() : 0;
             const auto max_fd = std::max(max_slave_fd, master.file_descriptor());
             if (-1 == select(max_fd + 1, &socket_fds, NULL, NULL, 0) ) {
@@ -40,21 +41,22 @@ struct server {
             }
 
             if (FD_ISSET(master.file_descriptor(), &socket_fds)) {
-                const auto slave = tcp_slave_socket::accept(master);
+                const auto slave = TCPSlaveSocket::accept(master);
                 //tcp_slave_socket::set_nonblocking(slave);
-                slave_fd_set.insert(slave);
+                slave_fd_set.insert(static_cast<int>(slave));
             }
 
             std::vector<int> slave_fds_to_be_erased; // if i want to do non-blocking need to make it threadsafe
             for(const int slave_fd: slave_fd_set) {
                 if (FD_ISSET(slave_fd, &socket_fds)) {
                     thread_pool.add_job([slave_fd](){
-                        const auto buf = tcp_slave_socket::recv(slave_fd);
+                        TCPSlaveSocket slave(slave_fd);
+                        const auto buf = slave.recv();
                         if (0 != buf.size()) {
                             const auto path = http_1dot0::get_request_file_path(buf);
-                            tcp_slave_socket::send(slave_fd, http_1dot0::get_response(path));
+                            slave.send(http_1dot0::get_response(path));
                         }
-                        tcp_slave_socket::kill(slave_fd); // just do blocking and kill for now
+                        slave.die(); // just do blocking and kill for now
 
                         // else if (errno != EAGAIN) { // for non-blocking io, no data available
                         //     tcp_slave_socket::kill(slave_fd);

@@ -26,7 +26,7 @@ struct ThreadPool {
         }
     }
 
-    void add_job(Job job) {
+    void add_job(JobQueue::Job job) {
         job_queue.push(job);
     }
 

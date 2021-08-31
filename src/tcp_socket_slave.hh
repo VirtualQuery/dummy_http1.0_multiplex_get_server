@@ -6,14 +6,9 @@
 
 #pragma once
 
-// change signatures to non-static ones?
-// will set still maintain order?
-// or maybe just cast inbetween keeping in set?
-// wish i could just extend int or something
-
-// probably should just define "less" and hope that it will be as fast as ints
-struct tcp_slave_socket {
-    static void set_nonblocking(int slave_fd) {
+// maybe i should have kept functions static
+struct TCPSlaveSocket {
+    void set_nonblocking() { // dead code
         // actually to hell with ioctl for now
         const auto mask = fcntl(slave_fd, F_GETFL, 0);
         if (-1 == fcntl(slave_fd, mask | O_NONBLOCK)) { // is it ok when it fails?
@@ -21,15 +16,23 @@ struct tcp_slave_socket {
         }
     }
 
-    static int accept(const TCPMasterSocket& master) {
+    TCPSlaveSocket(int _slave_fd_):
+        slave_fd(_slave_fd_)
+    {}
+
+    static TCPSlaveSocket accept(const TCPMasterSocket& master) {
         const auto ret = ::accept(master.file_descriptor(), NULL, NULL); // use addr here?
         if (-1 == ret) {
             perror("accept error");
         }
-        return ret;
+        return TCPSlaveSocket{ ret };
     }
 
-    static std::string recv(int slave_fd) {
+    explicit operator int() const {
+        return slave_fd;
+    }
+
+    std::string recv() const {
         constexpr size_t MAX_SIZE = 3000;
         char buf[MAX_SIZE + 1];
         const auto n_bytes_recv = ::recv(slave_fd, buf, MAX_SIZE, MSG_NOSIGNAL); // do i really need MSG_NOSIGNAL everywhere?
@@ -41,7 +44,7 @@ struct tcp_slave_socket {
         return buf;
     }
 
-    static int send(int slave_fd, const std::string& buf) {
+    int send(const std::string& buf) const {
         const auto ret = ::send(slave_fd, buf.data(), buf.size(), MSG_NOSIGNAL);
         if (-1 == ret) {
             perror("send error");
@@ -49,7 +52,7 @@ struct tcp_slave_socket {
         return ret;
     }
 
-    static void kill(int slave_fd) {
+    void die() {
         if (-1 == shutdown(slave_fd, SHUT_RDWR) ) {
             perror("shutdown error");
         }
@@ -57,4 +60,7 @@ struct tcp_slave_socket {
             perror("close error");
         }
     }
+
+private:
+    int slave_fd;
 };

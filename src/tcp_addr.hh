@@ -24,7 +24,9 @@ struct TCPAddr {
     std::string ip_str() const {
         char str[INET_ADDRSTRLEN];
         str[sizeof(str) - 1] = 0;
-        inet_ntop(AF_INET, &addr.sin_addr, str, INET_ADDRSTRLEN);
+        if (NULL == inet_ntop(AF_INET, &addr.sin_addr, str, INET_ADDRSTRLEN)) {
+            perror("inet_ntop error");
+        }
         return str;
     }
 
