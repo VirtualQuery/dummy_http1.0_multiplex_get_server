@@ -7,6 +7,7 @@
 #pragma once
 
 // maybe i should have kept functions static
+template<const size_t MTU>
 struct TCPSlaveSocket {
     void set_nonblocking() { // dead code
         // actually to hell with ioctl for now
@@ -33,9 +34,8 @@ struct TCPSlaveSocket {
     }
 
     std::string recv() const {
-        constexpr size_t MAX_SIZE = 3000;
-        char buf[MAX_SIZE + 1];
-        const auto n_bytes_recv = ::recv(slave_fd, buf, MAX_SIZE, MSG_NOSIGNAL); // do i really need MSG_NOSIGNAL everywhere?
+        char buf[MTU + 1];
+        const auto n_bytes_recv = ::recv(slave_fd, buf, MTU, MSG_NOSIGNAL); // do i really need MSG_NOSIGNAL everywhere?
         if (-1 == n_bytes_recv) {
             perror("recv error");
             return "";
@@ -45,6 +45,10 @@ struct TCPSlaveSocket {
     }
 
     int send(const std::string& buf) const {
+        if (buf.size() > MTU) {
+            perror("send error");
+            return -1;
+        }
         const auto ret = ::send(slave_fd, buf.data(), buf.size(), MSG_NOSIGNAL);
         if (-1 == ret) {
             perror("send error");

@@ -24,20 +24,22 @@ struct http_1dot0 {
         return path;
     }
 
+    template<const size_t MTU>
     static std::string get_response(const std::string& file_path) {
         std::ifstream fin(file_path);
         if (!fin.good()) {
             return get_response_not_found();
         }
         std::string s(std::istreambuf_iterator<char>(fin), {});
-        return get_response_ok(s);
+        return get_response_ok<MTU>(s);
     }
 
+    template<const size_t MTU>
     static std::string get_response_ok(const std::string& content) {
-        char buf[5000];
+        char buf[MTU];
         if (0 > snprintf(
             buf,
-            5000,
+            MTU - 1,
             "HTTP/1.0 200 OK\r\n"
             "Content-length: %zu\r\n"
             "Content-Type: text/html\r\n"

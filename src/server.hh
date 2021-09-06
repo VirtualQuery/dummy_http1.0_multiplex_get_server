@@ -15,6 +15,7 @@
 #pragma once
 
 struct server {
+    template<const size_t MTU>
     static void run(const opt::Params& params) {
         daemonize(params.directory.data());
 
@@ -41,7 +42,7 @@ struct server {
             }
 
             if (FD_ISSET(master.file_descriptor(), &socket_fds)) {
-                const auto slave = TCPSlaveSocket::accept(master);
+                const auto slave = TCPSlaveSocket<MTU>::accept(master);
                 slave_fd_set.insert(static_cast<int>(slave));
             }
 
@@ -49,11 +50,11 @@ struct server {
             for(const int slave_fd: slave_fd_set) {
                 if (FD_ISSET(slave_fd, &socket_fds)) {
                     thread_pool.add_job([slave_fd](){
-                        TCPSlaveSocket slave(slave_fd);
+                        TCPSlaveSocket<MTU> slave(slave_fd);
                         const auto buf = slave.recv();
                         if (0 != buf.size()) {
                             const auto path = http_1dot0::get_request_file_path(buf);
-                            slave.send(http_1dot0::get_response(path));
+                            slave.send(http_1dot0::get_response<MTU>(path));
                         }
                         slave.die();
                     });
