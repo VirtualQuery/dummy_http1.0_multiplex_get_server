@@ -20,7 +20,7 @@ void fork_off() {
 void daemonize(const char* dir) {
     fork_off();
 
-    if (-1 == setsid()) { // does it require sudo? probably not
+    if (-1 == setsid()) {
         perror("setsid error");
     }
 
@@ -47,11 +47,4 @@ void daemonize(const char* dir) {
     if (EOF == fclose(stderr)) {
         perror("fclose(stderr) error");
     }
-
-    // seems unnecessary right now
-    // for (int fd = sysconf(_SC_OPEN_MAX); 0 <= fd; --fd) {
-    //     if (-1 == close(fd)) {
-    //         perror("close error");
-    //     }
-    // }
 }
