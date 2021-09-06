@@ -46,7 +46,7 @@ struct server {
                 slave_fd_set.insert(static_cast<int>(slave));
             }
 
-            for(const auto it = slave_fd_set.begin(); it != slave_fd_set.end(); /* empty */) {
+            for(auto it = slave_fd_set.begin(); it != slave_fd_set.end(); /* empty */) {
                 const auto slave_fd = *it;
                 if (FD_ISSET(slave_fd, &socket_fds)) {
                     thread_pool.add_job([slave_fd](){
